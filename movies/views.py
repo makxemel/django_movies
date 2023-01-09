@@ -12,9 +12,10 @@ class GenreYear:
     """Жанры и года выхода фильмов"""
     def get_genres(self):
         return Genre.objects.all()
+    paginate_by = 1
 
-    def get_years(self):
-        return Movie.objects.filter(draft=False).values('year')
+    def get_year(self):
+        return Movie.objects.filter(draft=False).distinct().values('year')
 
 
 class MoviesView(GenreYear, ListView):
@@ -100,3 +101,17 @@ class AddStarRating(View):
             return HttpResponse(status=201)
         else:
             return HttpResponse(status=400)
+
+
+class Search(ListView):
+    """Поиск фильмов"""
+    paginate_by = 3
+
+    def get_queryset(self):
+        return Movie.objects.filter(title__iregex=self.request.GET.get("q"))
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['q'] = f"q={self.request.GET.get('q')}&"
+        return context
+
